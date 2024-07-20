@@ -18,6 +18,15 @@ const binSchema = new mongoose.Schema({
     lastUpdated: {
         type: Date,
         default: Date.now
+    },
+    acceptedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Driver',
+        default: null
+    },
+    notified: {
+        type: Boolean,
+        default: false
     }
 });
 

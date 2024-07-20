@@ -1,6 +1,23 @@
 const Driver = require('../models/driver.model');
+const Bin = require('../models/bin.model');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const mqttClient = require('../mqttClient');
+const { sendNotification } = require('../service/notification');
+
+mqttClient.on('message', async (topic, message) => {
+  if (topic === 'bin/full') {
+    const { binId } = JSON.parse(message.toString());
+    const bin = await Bin.findById(binId);
+
+    if (bin) {
+      const drivers = await Driver.find();
+      drivers.forEach(driver => {
+        sendNotification(driver, `Bin ${bin.location.coordinates} is full`);
+      });
+    }
+  }
+});
 
 const registerDriver = async (req, res) => {
   try {
@@ -156,6 +173,34 @@ const updateDriver = async (req, res) => {
   }
 };
 
+const updateDriverLocation = async (req, res) => {
+  try {
+    const driver = await Driver.findByIdAndUpdate(
+      req.params.id,
+      { location: req.body.location },
+      { new: true }
+    );
+    if (!driver) {
+      return res.status(404).json({ message: 'Driver not found' });
+    }
+    res.status(200).json(driver);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getDriverById = async (req, res) => {
+  try {
+    const driver = await Driver.findById(req.params.id);
+    if (!driver) {
+      return res.status(404).json({ message: 'Driver not found' });
+    }
+    res.status(200).json(driver);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   registerDriver,
   loginDriver,
@@ -163,4 +208,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   updateDriver,
+  updateDriverLocation,
+  getDriverById,
 };
