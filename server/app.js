@@ -3,7 +3,9 @@ const bodyParser = require('body-parser');
 const cookieParser = require("cookie-parser");
 const cors = require("cors")
 const helmet = require('helmet');
-
+const driverRoutes = require('./routes/driver.routes');
+const binRoutes = require('./routes/bin.routes');
+const mqttClient = require('./mqttClient');
 
 const app = express();
 
@@ -27,5 +29,7 @@ app.use((_req, res, next) => {
 
   next();
 });
+app.use('/api/driver', driverRoutes);
+app.use('/api/bin', binRoutes);
 
 module.exports= app
